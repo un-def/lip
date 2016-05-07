@@ -22,7 +22,7 @@ else:
 
 
 VERSION = '0.0.4'
-
+DEFAULT_LIRCD_SOCKET = '/dev/lircd'
 
 def verbose_print(*args, **kwargs):
     if not cli_args.verbose:
@@ -63,6 +63,11 @@ parser = argparse.ArgumentParser(description="lip v"+VERSION)
 parser.add_argument('-c', '--config',
                     required=False,
                     help="config file")
+parser.add_argument('-s', '--socket',
+                    required=False,
+                    default=DEFAULT_LIRCD_SOCKET,
+                    help="lircd socket (default: {})".format(
+                        DEFAULT_LIRCD_SOCKET))
 parser.add_argument('-v', '--verbose',
                     action='store_true',
                     help="verbose mode")
@@ -82,8 +87,8 @@ if cli_args.config:
 else:
     config_path = os.path.join(os.path.expanduser('~'), '.liprc')
 if not config.read(config_path):
-    sys.exit("Can't open {}".format(config_path))
-verbose_print("Config file: {}".format(config_path))
+    sys.exit("Can't open " + config_path)
+verbose_print("config file: " + config_path)
 try:
     config_rc_name = config.get('Settings', 'remote')
 except configparser.NoOptionError:
@@ -99,9 +104,10 @@ apps_sections = [s for s in config.sections()
                  if s.title() not in ('Settings', 'Default')]
 
 try:
-    lircd.connect('/dev/lircd')
+    lircd.connect(cli_args.socket)
 except (FileNotFoundError, ConnectionRefusedError):
-    sys.exit("Can't open /dev/lircd")
+    sys.exit("Can't open " + cli_args.socket)
+verbose_print("lircd socket: " + cli_args.socket)
 
 verbose_print("\n")
 
