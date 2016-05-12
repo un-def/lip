@@ -24,6 +24,7 @@ else:
 VERSION = '0.0.4'
 DEFAULT_LIRCD_SOCKET = '/dev/lircd'
 
+
 def verbose_print(*args, **kwargs):
     if not cli_args.verbose:
         return
@@ -134,6 +135,6 @@ while True:
                 exec_cmd(key_cmd)
             break
     if (not key_found and use_default_keys and
-                config.has_option('Default', rc_key)):
+            config.has_option('Default', rc_key)):
         exec_cmd(config.get('Default', rc_key))
     verbose_print("\n")
