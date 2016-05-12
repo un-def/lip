@@ -1,78 +1,64 @@
 ;lip config
 ;v0.0.4
 
-;2 первых раздела обязательно должны быть Settings и Default
-;допустимы 2 вида записи - 'кнопка:действие' и 'кнопка=действие'
+;comments start with semicolon
+;option format - button:action or button=action
 
-;некоторые команды xdotool:
-;key {клавиши} - эмулировать нажатие клавиши (или последовательности)
-;click {кнопка мыши} - эмулировать щелчкок кнопки мыши
-;mousemove {X Y} - переместить указатель мыши в координаты X, Y
-;mousemove_retative {X Y} - переместить указатель мыши относительно текущего положения на X, Y
-;подробнее - man xdotool
-;внутренние команды:
-;run {программа}
+;actions provided by xdotool:
+;key {KEY_NAME}
+;click {MOUSE_BUTTON}
+;mousemove {X Y}
+;mousemove_retative {X Y}
+;... and more (man xdotool)
+;actions provided by lip:
+;run {CMD}
 
-[Settings]                              ;настройки программы:
-remote: ASUS_DH_ALSA                    ;принимать команды только от этого пульта (закомментируйте строку, если принимать от любого)
-use_default_keys: 1                     ;использовать кнопки по умолчанию (раздел Default)
+[Settings]                              ;lip settings
+remote: AsusDH                          ;lirc remote name (comment this line to accept commands from any remote)
+use_default_keys: 1                     ;use default bindings ([Default] section)
 
-[Default]                               ;действия кнопок по умолчанию; раздел должен существовать обязательно (даже если пустой)
+[Default]                               ;default bindings
 KEY_VOLUMEUP: key Up
 KEY_VOLUMEDOWN: key Down
 KEY_PREVIOUS: key Left
 KEY_NEXT: key Right
 KEY_PLAYPAUSE: key Return
 KEY_SCREEN: key Escape
-KEY_1: click 1                          ;щелчок левой кнопкой
-KEY_2: click 2                          ;щелчок средней кнопкой
-KEY_3: click 3                          ;щелчок правой кнопкой
-KEY_4: run xfce4-appfinder              ;Application Finder
-KEY_POWER: run xfce4-session-logout     ;показать диалог выхода/выключения
+KEY_1: click 1
+KEY_2: click 2
+KEY_3: click 3
+KEY_4: run xfce4-appfinder
+KEY_POWER: run xfce4-session-logout
 
-[VLC]
-window_name: VLC media player$  ;паттерн, соответствующий имени окна (см. регулярные выражения)
-KEY_PLAYPAUSE: key space        ;плей/пауза
-KEY_NEXT: key n                 ;следующий
-KEY_PREVIOUS: key p             ;предыдущий
-KEY_VOLUMEUP: key ctrl+Up       ;громкость +
-KEY_VOLUMEDOWN: key ctrl+Down   ;громкость -
-KEY_SCREEN: key f               ;полный экран/оконный режим
-KEY_1: key b                    ;переключить аудиодорожку
-KEY_2: key v                    ;переключить субтитры
-KEY_3: key shift+s              ;скриншот
-KEY_POWER: key ctrl+q           ;выйти из программы
+[VLC]                                   ;app section (section name is not used by lip at the moment)
+window_name: VLC media player$          ;app window name regexp
+KEY_PLAYPAUSE: key space                ;any binding overrides [Default] value
+KEY_NEXT: key n
+KEY_PREVIOUS: key p
+KEY_VOLUMEUP: key ctrl+Up
+KEY_VOLUMEDOWN: key ctrl+Down
+KEY_SCREEN: key f
+KEY_1: key b
+KEY_2: key v
+KEY_3: key shift+s
+KEY_POWER: key ctrl+q
 
-[SMPlayer]
+[SMPlayer]                              ;another app section
 window_name: SMPlayer$
-KEY_PLAYPAUSE: key space        ;плей/пауза
-KEY_NEXT: key shift+period      ;следующий
-KEY_PREVIOUS: key shift+comma   ;предыдущий
-KEY_VOLUMEUP: key 0             ;громкость +
-KEY_VOLUMEDOWN: key 9           ;громкость -
-KEY_SCREEN: key f               ;полный экран/оконный режим
-KEY_3: key s                    ;скриншот
-KEY_POWER: key ctrl+x           ;выйти из программы
-KEY_4: key o                    ;OSD
+KEY_PLAYPAUSE: key space
+KEY_NEXT: key shift+period
+KEY_PREVIOUS: key shift+comma
+KEY_VOLUMEUP: key 0
+KEY_VOLUMEDOWN: key 9
+KEY_SCREEN: key f
+KEY_3: key s
+KEY_POWER: key ctrl+x
+KEY_4: key o
 
 [DeaDBeeF]
 window_name: DeaDBeeF-[0-9.]+$
-KEY_PLAYPAUSE: key ctrl+shift+alt+p     ;плей/пауза
-KEY_VOLUMEUP: key ctrl+shift+alt+q      ;громкость +
-KEY_VOLUMEDOWN: key ctrl+shift+alt+a    ;громкость -
-KEY_NEXT: key ctrl+shift+alt+m          ;следующий
-KEY_PREVIOUS: key ctrl+shift+alt+n      ;предыдущий
-
-[Tano]
-window_name: (Tano|tano)$
-KEY_PLAYPAUSE: key space        ;плей/пауза
-KEY_NEXT: key n                 ;следующий
-KEY_PREVIOUS: key b             ;предыдущий
-KEY_VOLUMEUP: key ctrl+Up       ;громкость +
-KEY_VOLUMEDOWN: key ctrl+Down   ;громкость -
-KEY_SCREEN: key f               ;полный экран/оконный режим
-KEY_1: key ctrl+shift+a         ;переключить аудиодорожку
-KEY_2: key ctrl+shift+s         ;переключить субтитры
-KEY_3: key ctrl+shift+i         ;скриншот
-KEY_POWER: key ctrl+q           ;выйти из программы
-KEY_4: key i                    ;OSD
+KEY_PLAYPAUSE: key ctrl+shift+alt+p
+KEY_VOLUMEUP: key ctrl+shift+alt+q
+KEY_VOLUMEDOWN: key ctrl+shift+alt+a
+KEY_NEXT: key ctrl+shift+alt+m
+KEY_PREVIOUS: key ctrl+shift+alt+n
