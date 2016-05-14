@@ -18,47 +18,27 @@ remote: AsusDH                          ;lirc remote name (comment this line to 
 use_default_keys: 1                     ;use default bindings ([Default] section)
 
 [Default]                               ;default bindings
-KEY_VOLUMEUP: key Up
-KEY_VOLUMEDOWN: key Down
-KEY_PREVIOUS: key Left
-KEY_NEXT: key Right
-KEY_PLAYPAUSE: key Return
-KEY_SCREEN: key Escape
-KEY_1: click 1
-KEY_2: click 2
-KEY_3: click 3
-KEY_4: run xfce4-appfinder
-KEY_POWER: run xfce4-session-logout
+KEY_PLAYPAUSE: key XF86AudioPlay
+KEY_KPPLUS: key XF86AudioRaiseVolume
+KEY_KPMINUS: key XF86AudioLowerVolume
+REV: key XF86AudioPrev
+KEY_FORWARD: key XF86AudioNext
+KEY_MAX: key f
+KEY_POWER: key Alt+F4
 
-[VLC]                                   ;app section (section name is not used by lip at the moment)
-window_name: VLC media player$          ;app window name regexp
+[mpv]                                   ;app section (section name is not used by lip at the moment)
+window_name: .+ - mpv$                  ;app window name regexp
 KEY_PLAYPAUSE: key space                ;any binding overrides [Default] value
-KEY_NEXT: key n
-KEY_PREVIOUS: key p
-KEY_VOLUMEUP: key ctrl+Up
-KEY_VOLUMEDOWN: key ctrl+Down
-KEY_SCREEN: key f
-KEY_1: key b
-KEY_2: key v
-KEY_3: key shift+s
-KEY_POWER: key ctrl+q
+KEY_KPPLUS: key 0
+KEY_KPMINUS: key 9
+REV: key Left
+KEY_FORWARD: key Right
 
-[SMPlayer]                              ;another app section
-window_name: SMPlayer$
-KEY_PLAYPAUSE: key space
-KEY_NEXT: key shift+period
-KEY_PREVIOUS: key shift+comma
-KEY_VOLUMEUP: key 0
-KEY_VOLUMEDOWN: key 9
-KEY_SCREEN: key f
-KEY_3: key s
-KEY_POWER: key ctrl+x
-KEY_4: key o
-
-[DeaDBeeF]
-window_name: DeaDBeeF-[0-9.]+$
-KEY_PLAYPAUSE: key ctrl+shift+alt+p
-KEY_VOLUMEUP: key ctrl+shift+alt+q
-KEY_VOLUMEDOWN: key ctrl+shift+alt+a
-KEY_NEXT: key ctrl+shift+alt+m
-KEY_PREVIOUS: key ctrl+shift+alt+n
+[Thunar]                                ;another app section
+window_name: File Manager$
+KEY_PLAYPAUSE: key Return
+KEY_KPPLUS: key Up
+KEY_KPMINUS: key Down
+REV: key Left
+KEY_FORWARD: key Right
+KEY_MAX: key Alt+Up
