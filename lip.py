@@ -123,7 +123,11 @@ while True:
     rc_key, rc_name = comm_parsed.group(3, 4)
     if config_rc_name and rc_name != config_rc_name:
         continue
-    active_window_name = get_cmd_out(xdo_cmd_windowname)
+    try:
+        active_window_name = get_cmd_out(xdo_cmd_windowname)
+    except subprocess.CalledProcessError:
+        print("Can't get window name\n")
+        continue
     verbose_print("Active window: " + active_window_name)
     key_found = False
     for section in apps_sections:
@@ -137,4 +141,4 @@ while True:
     if (not key_found and use_default_keys and
             config.has_option('Default', rc_key)):
         exec_cmd(config.get('Default', rc_key))
-    verbose_print("\n")
+    verbose_print()
