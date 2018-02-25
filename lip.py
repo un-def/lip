@@ -10,6 +10,7 @@ import socket
 import subprocess
 import re
 import argparse
+import shlex
 from datetime import datetime
 
 if sys.version_info.major > 2:
@@ -40,12 +41,12 @@ def sigint_handler(signal, frame):
 def exec_cmd(cmd):   # cmd - str || list
     verbose_print("Key action: " + cmd)
     if isinstance(cmd, str):
-        cmd = cmd.split()
+        cmd = shlex.split(cmd)
     if cmd[0] == 'run':
         cmd.pop(0)
     else:
         cmd.insert(0, 'xdotool')
-    subprocess.call(cmd)
+    subprocess.Popen(cmd)
 
 
 def get_cmd_out(cmd):   # cmd - str || list
