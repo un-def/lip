@@ -22,8 +22,11 @@ else:
     FileNotFoundError = ConnectionRefusedError = socket.error
 
 
-VERSION = '0.0.4'
-DEFAULT_LIRCD_SOCKET = '/dev/lircd'
+__author__ = 'un.def <un.def@ya.ru>'
+__version__ = '0.0.5'
+
+
+DEFAULT_LIRCD_SOCKET = '/var/run/lirc/lircd'
 
 
 def verbose_print(*args, **kwargs):
@@ -61,13 +64,12 @@ xdo_cmd_windowname = ['xdotool', 'getactivewindow', 'getwindowname']
 lircd = socket.socket(socket.AF_UNIX)
 signal.signal(signal.SIGINT, sigint_handler)
 
-parser = argparse.ArgumentParser(description="lip v"+VERSION)
+parser = argparse.ArgumentParser(description="lip v" + __version__)
 parser.add_argument('-c', '--config',
                     required=False,
                     help="config file")
 parser.add_argument('-s', '--socket',
                     required=False,
-                    default=DEFAULT_LIRCD_SOCKET,
                     help="lircd socket (default: {})".format(
                         DEFAULT_LIRCD_SOCKET))
 parser.add_argument('-v', '--verbose',
@@ -75,7 +77,7 @@ parser.add_argument('-v', '--verbose',
                     help="verbose mode")
 cli_args = parser.parse_args()
 
-verbose_print("lip v" + VERSION)
+verbose_print("lip v" + __version__)
 
 try:
     xdo_version = get_cmd_out(xdo_cmd_version)
@@ -105,11 +107,18 @@ else:
 apps_sections = [s for s in config.sections()
                  if s.title() not in ('Settings', 'Default')]
 
+lircd_socket = cli_args.socket
+if not lircd_socket:
+    try:
+        lircd_socket = config.get('Settings', 'socket')
+    except configparser.NoOptionError:
+        lircd_socket = DEFAULT_LIRCD_SOCKET
+
 try:
-    lircd.connect(cli_args.socket)
+    lircd.connect(lircd_socket)
 except (FileNotFoundError, ConnectionRefusedError):
-    sys.exit("Can't open " + cli_args.socket)
-verbose_print("lircd socket: " + cli_args.socket)
+    sys.exit("Can't open " + lircd_socket)
+verbose_print("lircd socket: " + lircd_socket)
 
 verbose_print("\n")
 

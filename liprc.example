@@ -14,6 +14,7 @@
 ;run {CMD}
 
 [Settings]                              ;lip settings
+socket: /var/run/lirc/lircd             ;default lircd socket location
 remote: AsusDH                          ;lirc remote name (comment this line to accept commands from any remote)
 use_default_keys: 1                     ;use default bindings ([Default] section)
 
