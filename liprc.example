@@ -28,7 +28,9 @@ KEY_MAX: key f
 KEY_POWER: key Alt+F4
 
 [mpv]                                   ;app section (section name is not used by lip at the moment)
-window_name: .+ - mpv$                  ;app window name regexp
+window_class: ^mpv$                     ;app window class regexp
+;window_instance: ^gl$                  ;app window class instance regexp
+;window_name: .+ - mpv$                  ;app window name regexp
 KEY_PLAYPAUSE: key space                ;any binding overrides [Default] value
 KEY_KPPLUS: key 0
 KEY_KPMINUS: key 9
@@ -36,7 +38,7 @@ REV: key Left
 KEY_FORWARD: key Right
 
 [Thunar]                                ;another app section
-window_name: File Manager$
+window_class: ^Thunar$
 KEY_PLAYPAUSE: key Return
 KEY_KPPLUS: key Up
 KEY_KPMINUS: key Down

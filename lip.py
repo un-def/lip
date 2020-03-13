@@ -11,6 +11,7 @@ import subprocess
 import re
 import argparse
 import shlex
+import json
 from datetime import datetime
 
 if sys.version_info.major > 2:
@@ -49,6 +50,7 @@ class LIP:
     rc_name = None
     use_default_keys = False
     apps_sections = ()
+    get_active_window_info = None
 
     def __init__(self):
         self.args = args = self.parse_args()
@@ -62,6 +64,21 @@ class LIP:
         except (OSError, FileNotFoundError, subprocess.CalledProcessError):
             raise LIPError("Can't execute xdotool")
         self.verbose_print(xdo_version)
+
+        try:
+            x11wininfo_version = self.get_cmd_out(['x11wininfo', '-v'])
+            get_active_window_info = self._get_active_window_info_x11wininfo
+        except (OSError, FileNotFoundError, subprocess.CalledProcessError):
+            x11wininfo_version = None
+            get_active_window_info = self._get_active_window_info_xdotool
+        if x11wininfo_version:
+            self.verbose_print(x11wininfo_version)
+        else:
+            self.print(
+                "x11winifo not found, use fallback to xdotool\n"
+                "window_instance and window_class options will be ignored"
+            )
+        self.get_active_window_info = get_active_window_info
 
         self.config = config = configparser.ConfigParser(
             **customize_configparser)
@@ -130,27 +147,48 @@ class LIP:
         rc_key, rc_name = match.groups()
         if self.rc_name and rc_name != self.rc_name:
             return
-        try:
-            active_window_name = self.get_cmd_out(
-                ['xdotool', 'getactivewindow', 'getwindowname'])
-        except subprocess.CalledProcessError:
-            self.print("Can't get window name\n")
+        win_info = self.get_active_window_info()
+        if not win_info:
+            self.print("Can't get window info\n")
             return
-        self.verbose_print("Active window: {}".format(active_window_name))
+
+        if self.args.verbose:
+            for field in ('name', 'instance', 'class'):
+                value = win_info[field]
+                if value is None:
+                    continue
+                self.verbose_print("Active window {}: {}".format(field, value))
+
         key_found = False
         config = self.config
         for section in self.apps_sections:
-            if config.has_option(section, 'window_name') and re.search(
-                    config.get(section, 'window_name'), active_window_name):
+            if all(
+                self.check_criterion(section=section, name=name, value=value)
+                for name, value in win_info.items() if value is not None
+            ):
                 if config.has_option(section, rc_key):
                     key_found = True
                     key_cmd = config.get(section, rc_key)
                     self.exec_cmd(key_cmd)
                 break
-        if (not key_found and self.use_default_keys and
-                config.has_option('Default', rc_key)):
+        if (
+                not key_found and
+                self.use_default_keys and
+                config.has_option('Default', rc_key)
+        ):
             self.exec_cmd(config.get('Default', rc_key))
         self.verbose_print()
+
+    def check_criterion(self, section, name, value):
+        config = self.config
+        if not name.startswith('window_'):
+            name = 'window_{}'.format(name)
+        if not config.has_option(section, name):
+            return True
+        pattern = config.get(section, name)
+        if not re.search(pattern, value):
+            return False
+        return True
 
     def parse_args(self):
         parser = argparse.ArgumentParser()
@@ -189,6 +227,30 @@ class LIP:
     def sigint_handler(self, signal_, frame):
         self.socket.close()
         raise LIPError("\r<SIGINT>")
+
+    def _get_active_window_info_xdotool(self):
+        try:
+            window_name = self.get_cmd_out(
+                ['xdotool', 'getactivewindow', 'getwindowname'])
+        except subprocess.CalledProcessError:
+            return None
+        return {
+            'name': window_name,
+            'instance': None,
+            'class': None,
+        }
+
+    def _get_active_window_info_x11wininfo(self):
+        try:
+            output = self.get_cmd_out(['x11wininfo', '-m', 'json'])
+        except subprocess.CalledProcessError:
+            return None
+        win_info = json.loads(output)
+        return {
+            'name': win_info['name'],
+            'instance': win_info['instance'],
+            'class': win_info['class'],
+        }
 
 
 if __name__ == '__main__':
