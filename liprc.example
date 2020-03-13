@@ -1,5 +1,5 @@
 ;lip config
-;v0.0.4
+;v0.1.0
 
 ;comments start with semicolon
 ;option format - button:action or button=action
@@ -16,7 +16,7 @@
 [Settings]                              ;lip settings
 socket: /var/run/lirc/lircd             ;default lircd socket location
 remote: AsusDH                          ;lirc remote name (comment this line to accept commands from any remote)
-use_default_keys: 1                     ;use default bindings ([Default] section)
+use_default_keys: true                  ;use default bindings ([Default] section)
 
 [Default]                               ;default bindings
 KEY_PLAYPAUSE: key XF86AudioPlay
