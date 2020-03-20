@@ -17,6 +17,7 @@
 socket: /var/run/lirc/lircd             ;default lircd socket location
 remote: AsusDH                          ;lirc remote name (comment this line to accept commands from any remote)
 use_default_keys: true                  ;use default bindings ([Default] section)
+use_mapping: true                       ;use mapping ([Mapping] section)
 
 [Default]                               ;default bindings
 KEY_PLAYPAUSE: key XF86AudioPlay
@@ -27,10 +28,13 @@ KEY_FORWARD: key XF86AudioNext
 KEY_MAX: key f
 KEY_POWER: key Alt+F4
 
+[Mapping]                               ;optional key remapping
+KEY_ORIGINAL_NAME: KEY_DESIRED_NAME
+
 [mpv]                                   ;app section (section name is not used by lip at the moment)
 window_class: ^mpv$                     ;app window class regexp
 ;window_instance: ^gl$                  ;app window class instance regexp
-;window_name: .+ - mpv$                  ;app window name regexp
+;window_name: .+ - mpv$                 ;app window name regexp
 KEY_PLAYPAUSE: key space                ;any binding overrides [Default] value
 KEY_KPPLUS: key 0
 KEY_KPMINUS: key 9

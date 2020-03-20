@@ -30,6 +30,11 @@ __version__ = '0.1.0'
 DEFAULT_LIRCD_SOCKET = '/var/run/lirc/lircd'
 COMMAND_REGEX = re.compile('(?:[0-9A-Fa-f]+) (?:[0-9a-f]+) (.+) (.+)')
 
+SETTINGS_SECTION = 'Settings'
+DEFAULT_SECTION = 'Default'
+MAPPING_SECTION = 'Mapping'
+SPECIAL_SECTIONS = (SETTINGS_SECTION, DEFAULT_SECTION, MAPPING_SECTION)
+
 
 def _noop(*args, **kwargs):
     pass
@@ -40,6 +45,12 @@ class LIPError(Exception):
     pass
 
 
+class LIPConfigParser(configparser.RawConfigParser):
+
+    def optionxform(self, optionstr):
+        return optionstr
+
+
 class LIP:
 
     print = print
@@ -48,6 +59,7 @@ class LIP:
     config = None
     socket = None
     rc_name = None
+    mapping = None
     use_default_keys = False
     apps_sections = ()
     get_active_window_info = None
@@ -80,8 +92,7 @@ class LIP:
             )
         self.get_active_window_info = get_active_window_info
 
-        self.config = config = configparser.ConfigParser(
-            **customize_configparser)
+        self.config = config = LIPConfigParser(**customize_configparser)
         if args.config:
             config_path = os.path.abspath(args.config)
         else:
@@ -94,7 +105,7 @@ class LIP:
         socket_path = args.socket
         if not socket_path:
             try:
-                socket_path = config.get('Settings', 'socket')
+                socket_path = config.get(SETTINGS_SECTION, 'socket')
             except configparser.NoOptionError:
                 socket_path = DEFAULT_LIRCD_SOCKET
         try:
@@ -104,15 +115,25 @@ class LIP:
         self.verbose_print("lircd socket: {}".format(socket_path))
 
         try:
-            rc_name = config.get('Settings', 'remote')
+            rc_name = config.get(SETTINGS_SECTION, 'remote')
         except configparser.NoOptionError:
             rc_name = None
         self.rc_name = rc_name
 
-        if config.has_section('Default'):
+        try:
+            use_mapping = config.getboolean(SETTINGS_SECTION, 'use_mapping')
+        except (configparser.NoOptionError, ValueError):
+            use_mapping = True
+        if use_mapping and config.has_section(MAPPING_SECTION):
+            mapping = dict(config.items(MAPPING_SECTION))
+        else:
+            mapping = {}
+        self.mapping = mapping
+
+        if config.has_section(DEFAULT_SECTION):
             try:
                 use_default_keys = config.getboolean(
-                    'Settings', 'use_default_keys')
+                    SETTINGS_SECTION, 'use_default_keys')
             except (configparser.NoOptionError, ValueError):
                 use_default_keys = True
         else:
@@ -120,9 +141,7 @@ class LIP:
         self.use_default_keys = use_default_keys
 
         self.apps_sections = tuple(
-            s for s in config.sections()
-            if s.title() not in ('Settings', 'Default')
-        )
+            s for s in config.sections() if s.title() not in SPECIAL_SECTIONS)
 
         self.verbose_print()
 
@@ -138,6 +157,7 @@ class LIP:
 
     def _run(self):
         comm = self.socket.recv(256).decode('utf-8').rstrip()
+        self.verbose_print("-" * 40)
         self.verbose_print(
             "Time: {0:%X.%f %x}\nCommand: {1}".format(datetime.now(), comm))
         match = COMMAND_REGEX.match(comm)
@@ -147,6 +167,12 @@ class LIP:
         rc_key, rc_name = match.groups()
         if self.rc_name and rc_name != self.rc_name:
             return
+        if rc_key in self.mapping:
+            orig_rc_key = rc_key
+            rc_key = self.mapping[orig_rc_key]
+            self.verbose_print(
+                "Key mapping: {0} -> {1}".format(orig_rc_key, rc_key))
+
         win_info = self.get_active_window_info()
         if not win_info:
             self.print("Can't get window info\n")
@@ -174,10 +200,9 @@ class LIP:
         if (
                 not key_found and
                 self.use_default_keys and
-                config.has_option('Default', rc_key)
+                config.has_option(DEFAULT_SECTION, rc_key)
         ):
-            self.exec_cmd(config.get('Default', rc_key))
-        self.verbose_print()
+            self.exec_cmd(config.get(DEFAULT_SECTION, rc_key))
 
     def check_criterion(self, section, name, value):
         config = self.config
