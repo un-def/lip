@@ -14,13 +14,17 @@ import shlex
 import json
 from datetime import datetime
 
-if sys.version_info.major > 2:
-    import configparser
-    customize_configparser = {'inline_comment_prefixes': ';'}
-else:
+PY2 = sys.version_info.major == 2
+
+if PY2:
     import ConfigParser as configparser
     customize_configparser = {}
     FileNotFoundError = ConnectionRefusedError = socket.error
+    string_type = basestring
+else:
+    import configparser
+    customize_configparser = {'inline_comment_prefixes': ';'}
+    string_type = str
 
 
 __author__ = 'un.def <un.def@ya.ru>'
@@ -40,6 +44,29 @@ def _noop(*args, **kwargs):
     pass
 
 
+def _print(template, encoding, *args, **kwargs):
+    if args or kwargs:
+        value = template.format(*args, **kwargs)
+    else:
+        value = template
+    if encoding is not None:
+        value = value.encode(encoding)
+    sys.stdout.write(value)
+    sys.stdout.write('\n')
+
+
+def _pipe_print(template='', *args, **kwargs):
+    if PY2:
+        encoding = 'utf-8'
+    else:
+        encoding = None
+    _print(template, encoding, *args, **kwargs)
+
+
+def _tty_print(template='', *args, **kwargs):
+    _print(template, None, *args, **kwargs)
+
+
 class LIPError(Exception):
 
     pass
@@ -53,8 +80,8 @@ class LIPConfigParser(configparser.RawConfigParser):
 
 class LIP:
 
-    print = print
-    verbose_print = _noop
+    print = None
+    verbose_print = None
     args = None
     config = None
     socket = None
@@ -66,10 +93,18 @@ class LIP:
 
     def __init__(self):
         self.args = args = self.parse_args()
-        if args.verbose:
-            self.verbose_print = print
 
-        self.verbose_print("lip v{}".format(__version__))
+        if sys.stdout.isatty():
+            print_function = _tty_print
+        else:
+            print_function = _pipe_print
+        self.print = print_function
+        if args.verbose:
+            self.verbose_print = print_function
+        else:
+            self.verbose_print = _noop
+
+        self.verbose_print("lip v{}", __version__)
 
         try:
             xdo_version = self.get_cmd_out(['xdotool', 'version'])
@@ -162,7 +197,7 @@ class LIP:
             "Time: {0:%X.%f %x}\nCommand: {1}".format(datetime.now(), comm))
         match = COMMAND_REGEX.match(comm)
         if not match:
-            self.print("Can't parse: {}\n".format(comm))
+            self.print("Can't parse: {}\n", comm)
             return
         rc_key, rc_name = match.groups()
         if self.rc_name and rc_name != self.rc_name:
@@ -170,8 +205,7 @@ class LIP:
         if rc_key in self.mapping:
             orig_rc_key = rc_key
             rc_key = self.mapping[orig_rc_key]
-            self.verbose_print(
-                "Key mapping: {0} -> {1}".format(orig_rc_key, rc_key))
+            self.verbose_print("Key mapping: {0} -> {1}", orig_rc_key, rc_key)
 
         win_info = self.get_active_window_info()
         if not win_info:
@@ -183,7 +217,7 @@ class LIP:
                 value = win_info[field]
                 if value is None:
                     continue
-                self.verbose_print("Active window {}: {}".format(field, value))
+                self.verbose_print("Active window {}: {}", field, value)
 
         key_found = False
         config = self.config
@@ -235,8 +269,8 @@ class LIP:
         return parser.parse_args()
 
     def exec_cmd(self, cmd):
-        self.verbose_print("Key action: " + cmd)
-        if isinstance(cmd, str):
+        self.verbose_print("Key action: {}", cmd)
+        if isinstance(cmd, string_type):
             cmd = shlex.split(cmd)
         if cmd[0] == 'run':
             cmd.pop(0)
@@ -245,7 +279,7 @@ class LIP:
         subprocess.Popen(cmd)
 
     def get_cmd_out(self, cmd):
-        if isinstance(cmd, str):
+        if isinstance(cmd, string_type):
             cmd = cmd.split()
         return subprocess.check_output(cmd).decode('utf-8').rstrip()
 
