@@ -8,7 +8,7 @@ irexec and irxevent replacement with INI-style configuration file.
 * LIRC
 * Python 2/3
 * xdotool
-* [x11wininfo](https://github.com/un-def/x11wininfo) (optional; required for `WM_CLASS` criteria)
+* x11wininfo ([C](https://github.com/un-def/x11wininfo) or [Go](https://github.com/un-def/x11wininfo-go) version) (optional; required for `WM_CLASS` criteria)
 
 ## How to use it
 
