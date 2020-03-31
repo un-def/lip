@@ -219,24 +219,23 @@ class LIP:
                     continue
                 self.verbose_print("Active window {}: {}", field, value)
 
-        key_found = False
         config = self.config
         for section in self.apps_sections:
             if all(
                 self.check_criterion(section=section, name=name, value=value)
                 for name, value in win_info.items() if value is not None
-            ):
-                if config.has_option(section, rc_key):
-                    key_found = True
-                    key_cmd = config.get(section, rc_key)
-                    self.exec_cmd(key_cmd)
+            ) and config.has_option(section, rc_key):
+                self.verbose_print("App section: {}", section)
+                key_cmd = config.get(section, rc_key)
+                self.exec_cmd(key_cmd)
                 break
-        if (
-                not key_found and
+        else:
+            if (
                 self.use_default_keys and
                 config.has_option(DEFAULT_SECTION, rc_key)
-        ):
-            self.exec_cmd(config.get(DEFAULT_SECTION, rc_key))
+            ):
+                self.verbose_print("Default section")
+                self.exec_cmd(config.get(DEFAULT_SECTION, rc_key))
 
     def check_criterion(self, section, name, value):
         config = self.config
