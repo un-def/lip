@@ -80,6 +80,8 @@ class LIPConfigParser(configparser.RawConfigParser):
 
 class LIP:
 
+    socket = None
+    socket_path = None
     print = None
     verbose_print = None
     args = None
@@ -136,17 +138,13 @@ class LIP:
             raise LIPError("Can't open {}".format(config_path))
         self.verbose_print("config file: {}".format(config_path))
 
-        self.socket = sock = socket.socket(socket.AF_UNIX)
         socket_path = args.socket
         if not socket_path:
             try:
                 socket_path = config.get(SETTINGS_SECTION, 'socket')
             except configparser.NoOptionError:
                 socket_path = DEFAULT_LIRCD_SOCKET
-        try:
-            sock.connect(socket_path)
-        except (FileNotFoundError, ConnectionRefusedError):
-            raise LIPError("Can't open {}".format(socket_path))
+        self.socket_path = socket_path
         self.verbose_print("lircd socket: {}".format(socket_path))
 
         try:
@@ -180,18 +178,35 @@ class LIP:
 
         self.verbose_print()
 
+    def connect(self):
+        socket_path = self.socket_path
+        self.socket = socket.socket(socket.AF_UNIX)
+        try:
+            self.socket.connect(socket_path)
+        except (FileNotFoundError, ConnectionRefusedError):
+            raise LIPError("Can't open {}".format(socket_path))
+
+    def close(self):
+        if self.socket:
+            self.socket.close()
+            self.socket = None
+
     def run(self):
+        self.connect()
         signal.signal(signal.SIGINT, self.sigint_handler)
         try:
             while True:
-                self._run()
+                self.process_command()
         except Exception as exc:
             raise LIPError(str(exc))
         finally:
-            self.socket.close()
+            self.close()
 
-    def _run(self):
-        comm = self.socket.recv(256).decode('utf-8').rstrip()
+    def process_command(self):
+        data = self.socket.recv(256)
+        if not data:
+            raise LIPError("Socket {} is closed".format(self.socket_path))
+        comm = data.decode('utf-8').rstrip()
         self.verbose_print("-" * 40)
         self.verbose_print(
             "Time: {0:%X.%f %x}\nCommand: {1}".format(datetime.now(), comm))
@@ -221,10 +236,10 @@ class LIP:
 
         config = self.config
         for section in self.apps_sections:
-            if all(
+            if config.has_option(section, rc_key) and all(
                 self.check_criterion(section=section, name=name, value=value)
                 for name, value in win_info.items() if value is not None
-            ) and config.has_option(section, rc_key):
+            ):
                 self.verbose_print("App section: {}", section)
                 key_cmd = config.get(section, rc_key)
                 self.exec_cmd(key_cmd)
@@ -283,7 +298,7 @@ class LIP:
         return subprocess.check_output(cmd).decode('utf-8').rstrip()
 
     def sigint_handler(self, signal_, frame):
-        self.socket.close()
+        self.close()
         raise LIPError("\r<SIGINT>")
 
     def _get_active_window_info_xdotool(self):
