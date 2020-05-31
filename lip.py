@@ -69,8 +69,8 @@ def _tty_print(template='', *args, **kwargs):
 
 def _get_xdg_config_home():
     from_env = os.environ.get('XDG_CONFIG_HOME')
-    if from_env:
-        return os.path.abspath(from_env)
+    if from_env and os.path.isabs(from_env):
+        return from_env
     return os.path.join(os.path.expanduser('~'), '.config')
 
 
