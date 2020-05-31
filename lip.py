@@ -67,6 +67,13 @@ def _tty_print(template='', *args, **kwargs):
     _print(template, None, *args, **kwargs)
 
 
+def _get_xdg_config_home():
+    from_env = os.environ.get('XDG_CONFIG_HOME')
+    if from_env:
+        return os.path.abspath(from_env)
+    return os.path.join(os.path.expanduser('~'), '.config')
+
+
 class LIPError(Exception):
 
     pass
@@ -133,7 +140,7 @@ class LIP:
         if args.config:
             config_path = os.path.abspath(args.config)
         else:
-            config_path = os.path.join(os.path.expanduser('~'), '.liprc')
+            config_path = os.path.join(_get_xdg_config_home(), 'lip.ini')
         if not config.read(config_path):
             raise LIPError("Can't open {}".format(config_path))
         self.verbose_print("config file: {}".format(config_path))
